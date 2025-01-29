@@ -268,10 +268,10 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider implement
   }
 
   protected void configureSSLContext() {
+    ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
     try {
       if (tlsConfiguration != null) {
         SSLContext sslContext = tlsConfiguration.createSslContext();
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         // force loading of class from connector instead of the one from the library, because it uses reflection
         ClassLoader firewallLoader = new FirewallLoader(currentClassLoader);
         ClassLoader loader = new URLClassLoader(new URL[]{this.getClass().getProtectionDomain().getCodeSource().getLocation()}, firewallLoader);
@@ -285,6 +285,8 @@ public class ActiveMQConnectionProvider extends BaseConnectionProvider implement
     } catch (KeyManagementException | NoSuchAlgorithmException | InvocationTargetException | IllegalAccessException
         | NoSuchMethodException e) {
       throw new JmsExtensionException("A problem occurred trying to configure SSL Options on ActiveMQ Connection", e);
+    } finally {
+      Thread.currentThread().setContextClassLoader(currentClassLoader);
     }
   }
 
